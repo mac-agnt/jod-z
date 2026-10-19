@@ -17,7 +17,7 @@ type Step = "look" | "upgrade" | "delivery" | "review";
  * Big yes, quiet no. Each offer is skippable in one tap.
  */
 export function BuyNowFlow({ base, onClose }: { base: NewLine | null; onClose: () => void }) {
-  const { addMany, setOpen } = useCart();
+  const { checkout, pending, error } = useCart();
   const main = base ? getProduct(base.product) : undefined;
   const extra = products.find((p) => p.slug !== base?.product);
 
@@ -26,7 +26,6 @@ export function BuyNowFlow({ base, onClose }: { base: NewLine | null; onClose: (
   const [xColour, setXColour] = useState<Colourway | undefined>(extra?.colourways[0]);
   const [xSize, setXSize] = useState<string | null>(null);
   const [xHint, setXHint] = useState("");
-  const [done, setDone] = useState(false);
 
   // Fresh flow each time Buy now is pressed
   useEffect(() => {
@@ -36,7 +35,6 @@ export function BuyNowFlow({ base, onClose }: { base: NewLine | null; onClose: (
     setXColour(extra?.colourways[0]);
     setXSize(base.size && extra?.sizes.includes(base.size) ? base.size : null);
     setXHint("");
-    setDone(false);
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", onKey);
@@ -70,10 +68,8 @@ export function BuyNowFlow({ base, onClose }: { base: NewLine | null; onClose: (
     go("delivery");
   };
 
-  const finish = () => {
-    addMany(lines);
-    setDone(true);
-  };
+  // Buy now merges these lines into the bag and goes straight to checkout.
+  const finish = () => checkout(lines);
 
   const upgradeCost = nextPack && legLine ? nextPack.price - legLine.price : 0;
   const upgradeSave = nextPack && legLine ? main.price * nextPack.pairs - nextPack.price : 0;
@@ -91,17 +87,7 @@ export function BuyNowFlow({ base, onClose }: { base: NewLine | null; onClose: (
           </button>
         </header>
 
-        {done ? (
-          <section className="flow-body flow-done" key="done">
-            <span className="flow-ico"><Icon name="check" size={40} /></span>
-            <h2 className="serif flow-title">Ready for checkout.</h2>
-            <p className="muted">{delivery.freeMessage}. Your order arrives in {delivery.window.toLowerCase()}.</p>
-            <p className="small muted">Secure checkout connects to Shopify at launch.</p>
-            <div className="flow-ctas">
-              <Button variant="gold" onClick={() => { onClose(); setOpen(true); }}>View bag</Button>
-            </div>
-          </section>
-        ) : step === "look" && extra && xColour ? (
+        {step === "look" && extra && xColour ? (
           <section className="flow-body" key="look">
             <p className="flow-kicker">Riders who bought this also added</p>
             <h2 className="serif flow-title">Complete the look.</h2>
@@ -197,8 +183,9 @@ export function BuyNowFlow({ base, onClose }: { base: NewLine | null; onClose: (
               <p className="small muted pay-line">Or 3 payments of {formatPrice(Math.ceil((total / 3) * 100) / 100)} with <Klarna /></p>
             </div>
             <div className="flow-ctas">
-              <Button variant="gold" onClick={finish}>Checkout securely</Button>
+              <Button variant="gold" onClick={finish} disabled={pending}>{pending ? "Opening secure checkout" : "Checkout securely"}</Button>
             </div>
+            {error && <p className="small drawer-error center" role="alert">{error}</p>}
           </section>
         )}
       </div>

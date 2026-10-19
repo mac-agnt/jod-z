@@ -1,17 +1,17 @@
 "use client";
 import { useState } from "react";
 
-// Age guide and jockey sizes from jod-z.com. Measurements are indicative:
-// replace with Jody's size chart before launch.
+// Age guide and jockey sizes as published on jod-z.com. Add measurements
+// in cm here once Jody supplies the garment spec.
 const tables = {
   Leggings: {
-    head: ["Size", "Age guide", "Waist cm", "Hip cm", "Inside leg cm"],
+    head: ["Size", "Age guide"],
     rows: [
-      ["2XS", "6 to 7", "54 to 57", "62 to 66", "56"],
-      ["XS", "8 to 9", "57 to 60", "66 to 71", "61"],
-      ["S", "10 to 11", "60 to 64", "71 to 77", "66"],
-      ["M", "12 to 13", "64 to 68", "77 to 83", "70"],
-      ["L", "14 to 15", "68 to 73", "83 to 89", "73"],
+      ["2XS", "6 to 7 years"],
+      ["XS", "8 to 9 years"],
+      ["S", "10 to 11 years"],
+      ["M", "12 to 13 years"],
+      ["L", "14 to 15 years"],
     ],
     note: "Sizes go by age. Tall or broad for their age? Size up for a comfortable fit in the saddle.",
   },
@@ -45,12 +45,12 @@ export function SizeGuide({ initial = "Leggings" }: { initial?: SizeTab }) {
           <tbody>{t.rows.map((r) => <tr key={r[0]}>{r.map((c, i) => (i === 0 ? <th key={i} scope="row">{c}</th> : <td key={i}>{c}</td>))}</tr>)}</tbody>
         </table>
       </div>
-      <div className="measure">
-        <div><span className="label">Waist</span><p>Around the natural waist, the narrowest point.</p></div>
-        <div><span className="label">Hip</span><p>Around the fullest part of the hips, feet together.</p></div>
-        <div><span className="label">Inside leg</span><p>From the crotch to the ankle bone.</p></div>
-      </div>
-      <p className="small muted">{t.note} Indicative measurements, final chart to be confirmed.</p>
+      {tab === "Breeches" && (
+        <div className="measure">
+          <div><span className="label">Waist</span><p>Around the natural waist, the narrowest point, over light clothing.</p></div>
+        </div>
+      )}
+      <p className="small muted">{t.note} Still unsure? Email hello@jod-z.com with age, height and usual size.</p>
     </div>
   );
 }

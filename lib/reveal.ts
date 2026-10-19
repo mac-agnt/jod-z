@@ -41,7 +41,7 @@ export const markIn = (el: Element) => el.setAttribute("data-in", "");
 
 /** Sets `data-in` on the ref'd element when it scrolls into view. Pass `key`
  *  when the element can mount later (e.g. after a route change). */
-export function useReveal(ref: RefObject<Element>, key?: unknown) {
+export function useReveal(ref: RefObject<Element | null>, key?: unknown) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;

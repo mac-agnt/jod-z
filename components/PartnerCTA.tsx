@@ -17,7 +17,7 @@ export function PartnerCTA() {
   const path = usePathname();
   const glass = useRef<HTMLDivElement>(null);
   useReveal(glass, path);
-  if (path === "/affiliates" || path === "/retailers") return null;
+  if (["/affiliates", "/retailers", "/sign-in", "/auth", "/checkout"].some((p) => path.startsWith(p))) return null;
   return (
     <section className="partner" aria-labelledby="partner-title">
       {/* eslint-disable-next-line @next/next/no-img-element */}

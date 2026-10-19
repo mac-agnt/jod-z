@@ -1,0 +1,1 @@
+ALTER TABLE "contact_messages" ADD COLUMN "is_demo" boolean DEFAULT false NOT NULL;

@@ -18,7 +18,20 @@ type Props = {
   load?: boolean;
 };
 
-const textOf = (node: ReactNode): string => {
+// React 19 hands elements created in a Server Component to client children
+// as lazy references. Resolve them so SSR and hydration split identically.
+const LAZY = Symbol.for("react.lazy");
+type Lazy = { $$typeof: symbol; _payload: unknown; _init: (p: unknown) => ReactNode };
+const unwrap = (node: ReactNode): ReactNode => {
+  const l = node as unknown as Lazy | null;
+  if (l && typeof l === "object" && l.$$typeof === LAZY) {
+    try { return unwrap(l._init(l._payload)); } catch { return node; }
+  }
+  return node;
+};
+
+const textOf = (raw: ReactNode): string => {
+  const node = unwrap(raw);
   if (typeof node === "string" || typeof node === "number") return String(node);
   if (Array.isArray(node)) return node.map(textOf).join("");
   if (isValidElement(node)) {
@@ -41,7 +54,8 @@ export function RevealText({ children, as = "h2", className = "", id, delay = 0,
   }, [load]);
 
   let n = 0;
-  const split = (node: ReactNode): ReactNode => {
+  const split = (raw: ReactNode): ReactNode => {
+    const node = unwrap(raw);
     if (typeof node === "string" || typeof node === "number") {
       return String(node).split(/(\s+)/).map((part, k) => {
         if (part === "" || /^\s+$/.test(part)) return part;

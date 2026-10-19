@@ -18,7 +18,9 @@ export function Loader() {
         try { sessionStorage.setItem("jz-loaded", "1"); } catch {}
       }, 3500);
     };
-    Promise.race([document.fonts.load("120px 'Mrs Saint Delafield'"), new Promise((r) => setTimeout(r, 1200))]).then(start);
+    // next/font hashes the family name; read it from the token.
+    const family = getComputedStyle(root).getPropertyValue("--font-script").trim() || "cursive";
+    Promise.race([document.fonts.load(`120px ${family}`), new Promise((r) => setTimeout(r, 1200))]).then(start);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 

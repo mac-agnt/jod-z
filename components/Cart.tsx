@@ -2,6 +2,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { formatPrice, getProduct } from "@/lib/products";
 import { delivery } from "@/lib/offer";
+import { checkoutAction } from "@/lib/commerce/actions";
+import { getAttribution, referralCode, track } from "@/lib/analytics/client";
 import { ProductRender } from "./Render";
 import { Button } from "./Button";
 import { Icon } from "./Icon";
@@ -20,6 +22,12 @@ type Ctx = {
   add: (l: NewLine, opts?: { open?: boolean }) => void;
   addMany: (ls: NewLine[]) => void;
   setQty: (i: number, qty: number) => void;
+  clear: () => void;
+  /** Sends the bag (plus any extra lines) to checkout. */
+  checkout: (extra?: NewLine[]) => Promise<void>;
+  pending: boolean;
+  error: string;
+  code?: string;
 };
 
 const CartCtx = createContext<Ctx | null>(null);
@@ -38,26 +46,44 @@ function merge(prev: Line[], l: NewLine): Line[] {
   return prev.map((p, j) => (j === i ? { ...p, qty: p.qty + 1 } : p));
 }
 
+const BAG = "jz-bag-v2";
+const BAG_DAYS = 14;
+// Checkout happens on Shopify, which cannot tell this site the order went
+// through. A bag that went to checkout over an hour ago is treated as bought.
+const CHECKED_OUT_MINUTES = 60;
+type Saved = { lines: Line[]; at: number; checkoutAt?: number };
+
+const sum = (ls: Line[]) => ls.reduce((n, l) => n + l.price * l.qty, 0);
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<Line[]>([]);
   const [open, setOpen] = useState(false);
   const [ready, setReady] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const [code, setCode] = useState<string>();
 
-  // Keep the bag across page loads for this visit
+  // Keep the bag across visits on this device for two weeks
   useEffect(() => {
     try {
-      const saved = sessionStorage.getItem("jz-bag");
-      if (saved) setLines(JSON.parse(saved) as Line[]);
+      const saved = JSON.parse(localStorage.getItem(BAG) ?? "null") as Saved | null;
+      const fresh = saved && Date.now() - saved.at < BAG_DAYS * 86_400_000;
+      const bought = saved?.checkoutAt && Date.now() - saved.checkoutAt > CHECKED_OUT_MINUTES * 60_000;
+      if (fresh && !bought) setLines(saved.lines);
     } catch {}
+    setCode(referralCode());
+    if (new URLSearchParams(window.location.search).get("bag") === "open") setOpen(true);
     setReady(true);
   }, []);
   useEffect(() => {
     if (!ready) return;
-    try { sessionStorage.setItem("jz-bag", JSON.stringify(lines)); } catch {}
+    try { localStorage.setItem(BAG, JSON.stringify({ lines, at: Date.now() } satisfies Saved)); } catch {}
   }, [lines, ready]);
 
   const add = useCallback((l: NewLine, opts?: { open?: boolean }) => {
     setLines((prev) => merge(prev, l));
+    setError("");
+    track("add_to_cart", { product: l.product, colour: l.colour, size: l.size, pairs: l.pairs, value: l.price });
     if (opts?.open !== false) setOpen(true);
   }, []);
 
@@ -66,21 +92,52 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setQty = useCallback((i: number, qty: number) => {
-    setLines((prev) => (qty <= 0 ? prev.filter((_, j) => j !== i) : prev.map((p, j) => (j === i ? { ...p, qty } : p))));
+    setLines((prev) => (qty <= 0 ? prev.filter((_, j) => j !== i) : prev.map((p, j) => (j === i ? { ...p, qty: Math.min(qty, 20) } : p))));
   }, []);
+
+  const clear = useCallback(() => {
+    setLines([]);
+    try { localStorage.removeItem(BAG); } catch {}
+  }, []);
+
+  const checkout = useCallback(async (extra: NewLine[] = []) => {
+    const all = extra.reduce(merge, lines);
+    if (extra.length) setLines(all);
+    if (all.length === 0) return;
+    setPending(true);
+    setError("");
+    track("begin_checkout", { value: sum(all) });
+    try {
+      const r = await checkoutAction(all.map(({ product, colour, size, pairs, qty }) => ({ product, colour, size, pairs, qty })), getAttribution());
+      if (r.ok) {
+        try { localStorage.setItem(BAG, JSON.stringify({ lines: all, at: Date.now(), checkoutAt: Date.now() } satisfies Saved)); } catch {}
+        window.location.assign(r.url);
+        return;
+      }
+      setError(r.error);
+    } catch {
+      setError("Checkout is unavailable right now. Please try again in a minute.");
+    }
+    setPending(false);
+  }, [lines]);
 
   const value = useMemo(
     () => ({
       lines,
       count: lines.reduce((n, l) => n + l.qty * l.pairs, 0),
-      total: lines.reduce((n, l) => n + l.price * l.qty, 0),
+      total: sum(lines),
       open,
       setOpen,
       add,
       addMany,
       setQty,
+      clear,
+      checkout,
+      pending,
+      error,
+      code,
     }),
-    [lines, open, add, addMany, setQty]
+    [lines, open, add, addMany, setQty, clear, checkout, pending, error, code]
   );
 
   return (
@@ -114,8 +171,7 @@ export const lineLabel = (l: NewLine) => {
 };
 
 function CartDrawer() {
-  const { lines, open, setOpen, setQty, total } = useCart();
-  const [note, setNote] = useState(false);
+  const { lines, open, setOpen, setQty, total, checkout, pending, error, code } = useCart();
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
@@ -165,9 +221,10 @@ function CartDrawer() {
             <div className="drawer-foot">
               <div className="row"><span className="label">Subtotal</span><span>{formatPrice(total)}</span></div>
               <div className="row"><span className="label">Delivery</span><span className="gold">Free</span></div>
+              {code && <p className="small drawer-code"><Icon name="check" size={14} /> Code {code} is applied at checkout.</p>}
               <p className="muted small pay-line"><span>Pay in 3 with</span> <Klarna /> <span>or Apple Pay, Google Pay, PayPal.</span></p>
-              <Button variant="gold" block onClick={() => setNote(true)}>Checkout securely</Button>
-              {note && <p className="small muted" role="status">Checkout connects to Shopify at launch.</p>}
+              <Button variant="gold" block onClick={() => checkout()} disabled={pending}>{pending ? "Opening secure checkout" : "Checkout securely"}</Button>
+              {error && <p className="small drawer-error" role="alert">{error}</p>}
             </div>
           </>
         )}
