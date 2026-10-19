@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { ProductRender } from "@/components/Render";
 import { ColourImage } from "@/components/ColourImage";
@@ -21,6 +22,8 @@ import { LOW_STOCK, type Availability } from "@/lib/commerce/types";
 import { track } from "@/lib/analytics/client";
 
 const guideTab: Record<ProductKind, SizeTab> = { legging: "Leggings", breech: "Breeches" };
+// Full bleed on phones, a column of at most 680px beside the buy box above 980px.
+const GALLERY_SIZES = "(max-width: 980px) 100vw, 680px";
 
 export function PDP({ slug, initialColour }: { slug: string; initialColour: string }) {
   const product = getProduct(slug) as Product;
@@ -108,29 +111,34 @@ export function PDP({ slug, initialColour }: { slug: string; initialColour: stri
   const buyNow = () => { const l = selection(); if (l) setFlow(l); };
 
   const tone = isLight(colour.hex) ? "stage-dark" : "";
+  // Gallery stills are 1122x1402 fabric close-ups, kept at quality 85. Slides
+  // after the first start hidden, so they load at low priority behind the
+  // colour image on show.
   const photo = (src: string, alt: string) => (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img className="pg-img" src={src} alt={alt} loading="lazy" draggable={false} />
+    <Image className="pg-img" src={src} alt={alt} width={1122} height={1402} sizes={GALLERY_SIZES} quality={85} fetchPriority="low" draggable={false} />
+  );
+  const thumb = (src: string) => (
+    <Image className="pg-img" src={src} alt="" width={1122} height={1402} sizes="68px" draggable={false} />
   );
   const colourView = colour.image ? (
-    <div className="pg-colour"><ColourImage product={product} active={colour.slug} eager /></div>
+    <div className="pg-colour"><ColourImage product={product} active={colour.slug} sizes={GALLERY_SIZES} eager /></div>
   ) : (
     <div className={`pg-render stage ${tone}`}><ProductRender kind={product.kind} hex={colour.hex} title={`${product.name} in ${colour.name}`} className="fade-swap" /></div>
   );
   const slides: Slide[] =
     product.kind === "legging"
       ? [
-          { key: "colour", label: colour.name, info: "Fully opaque 4-way stretch. No see-through, no sag.", view: colourView, thumb: colour.image ? photo(colour.image, "") : colourView },
-          { key: "pocket", label: "Phone pocket", info: "Deep thigh pocket for your phone or treats, with the embossed Jod-Z mark.", view: photo(stills.pocket, "Phone pocket and embossed Jod-Z logo"), thumb: photo(stills.pocket, "") },
-          { key: "seat", label: "In the saddle", info: "High waist that stays put through every stride.", view: photo(stills.seat, "Rider in the saddle wearing Jod-Z leggings"), thumb: photo(stills.seat, "") },
-          { key: "flat", label: "Construction", info: "Shaped knee panel with silicone grip and flat, chafe-free seams.", view: photo(stills.flatlay, "Jod-Z leggings laid flat on marble"), thumb: photo(stills.flatlay, "") },
-          { key: "door", label: "Yard to ring", info: "Smart enough for the show, tough enough for mucking out.", view: photo(stills.door, "Young rider in Jod-Z leggings leading her horse from the stable"), thumb: photo(stills.door, "") },
-          { key: "sunset", label: "Breathable", info: "Quick-dry fabric for long days and hot schooling sessions.", view: photo(stills.sunset, "Rider cantering at sunset in Jod-Z leggings"), thumb: photo(stills.sunset, "") },
+          { key: "colour", label: colour.name, info: "Fully opaque 4-way stretch. No see-through, no sag.", view: colourView, thumb: colour.image ? thumb(colour.image) : colourView },
+          { key: "pocket", label: "Phone pocket", info: "Deep thigh pocket for your phone or treats, with the embossed Jod-Z mark.", view: photo(stills.pocket, "Phone pocket and embossed Jod-Z logo"), thumb: thumb(stills.pocket) },
+          { key: "seat", label: "In the saddle", info: "High waist that stays put through every stride.", view: photo(stills.seat, "Rider in the saddle wearing Jod-Z leggings"), thumb: thumb(stills.seat) },
+          { key: "flat", label: "Construction", info: "Shaped knee panel with silicone grip and flat, chafe-free seams.", view: photo(stills.flatlay, "Jod-Z leggings laid flat on marble"), thumb: thumb(stills.flatlay) },
+          { key: "door", label: "Yard to ring", info: "Smart enough for the show, tough enough for mucking out.", view: photo(stills.door, "Young rider in Jod-Z leggings leading her horse from the stable"), thumb: thumb(stills.door) },
+          { key: "sunset", label: "Breathable", info: "Quick-dry fabric for long days and hot schooling sessions.", view: photo(stills.sunset, "Rider cantering at sunset in Jod-Z leggings"), thumb: thumb(stills.sunset) },
         ]
       : [
-          { key: "colour", label: colour.name, info: colour.note, view: colourView, thumb: colour.image ? photo(colour.image, "") : colourView },
-          { key: "waist", label: "Adjustable waistband", info: "Fine-tune the fit at the waist, with a zipped pocket on each hip.", view: photo(breechStills.detail, "Close up of the Monarch Navy waistband, zipped hip pocket and tan suede knee panel"), thumb: photo(breechStills.detail, "") },
-          { key: "flat", label: "Suede knee panels", info: "Luxury suede for comfort and durability in the saddle.", view: photo(breechStills.flat, "The Eclipse Black breech laid flat on marble"), thumb: photo(breechStills.flat, "") },
+          { key: "colour", label: colour.name, info: colour.note, view: colourView, thumb: colour.image ? thumb(colour.image) : colourView },
+          { key: "waist", label: "Adjustable waistband", info: "Fine-tune the fit at the waist, with a zipped pocket on each hip.", view: photo(breechStills.detail, "Close up of the Monarch Navy waistband, zipped hip pocket and tan suede knee panel"), thumb: thumb(breechStills.detail) },
+          { key: "flat", label: "Suede knee panels", info: "Luxury suede for comfort and durability in the saddle.", view: photo(breechStills.flat, "The Eclipse Black breech laid flat on marble"), thumb: thumb(breechStills.flat) },
         ];
 
 
@@ -234,8 +242,7 @@ export function PDP({ slug, initialColour }: { slug: string; initialColour: stri
                   <article key={p.slug} className="more-card">
                     <div className={`more-img stage ${lead.image ? "stage-photo" : ""}`}>
                       {lead.image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={lead.image} alt="" loading="lazy" />
+                        <Image src={lead.image} alt="" width={1122} height={1402} sizes="(max-width: 860px) 100vw, (max-width: 1520px) 45vw, 700px" />
                       ) : (
                         <ProductRender kind={p.kind} hex={p.colourways[1]?.hex ?? lead.hex} title="" />
                       )}

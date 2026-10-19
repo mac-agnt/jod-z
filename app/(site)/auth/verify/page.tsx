@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { stills } from "@/lib/media";
+import Image from "next/image";
+import { stills, AUTH_VISUAL_SIZES } from "@/lib/media";
 import { Logo } from "@/components/Logo";
 import { verifyAction } from "@/lib/auth/actions";
 
@@ -15,8 +16,7 @@ export default async function Verify({ searchParams }: { searchParams: Promise<{
   return (
     <main className="auth">
       <div className="auth-visual">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={stills.stable} alt="Young rider in Jod-Z leggings standing with her horse at the stable" />
+        <Image src={stills.stable} alt="Young rider in Jod-Z leggings standing with her horse at the stable" width={1122} height={1402} sizes={AUTH_VISUAL_SIZES} loading="eager" />
       </div>
       <div className="auth-panel">
         <div className="auth-box">

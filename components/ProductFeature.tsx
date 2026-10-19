@@ -21,7 +21,7 @@ export function ProductFeature({ product, flip = false, initial }: { product: Pr
   return (
     <article className={`pf ${flip ? "pf-flip" : ""}`} aria-labelledby={`${product.slug}-title`} style={{ "--sw": active.hex } as CSSProperties}>
       <Reveal variant="clip" className="pf-stage">
-        <ColourImage product={product} active={active.slug} />
+        <ColourImage product={product} active={active.slug} sizes="(max-width: 900px) 100vw, (max-width: 1520px) 45vw, 640px" />
         {spots && <Hotspots spots={spots} />}
       </Reveal>
 

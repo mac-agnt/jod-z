@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { stills } from "@/lib/media";
+import Image from "next/image";
+import { stills, AUTH_VISUAL_SIZES } from "@/lib/media";
 import { TradeAuth } from "@/components/TradeAuth";
 import { safeNext } from "@/lib/auth/constants";
 import { RetailerForm } from "@/components/forms/RetailerForm";
@@ -11,8 +12,7 @@ export default async function Retailers({ searchParams }: { searchParams: Promis
   return (
     <main className="auth">
       <div className="auth-visual">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={stills.sunset} alt="Rider and horse at sunset in Jod-Z" />
+        <Image src={stills.sunset} alt="Rider and horse at sunset in Jod-Z" width={1122} height={1402} sizes={AUTH_VISUAL_SIZES} loading="eager" />
       </div>
       <TradeAuth portal="retailer" next={safeNext(next, "/retailers/portal")} denied={!!denied} apply={<RetailerForm />} />
     </main>

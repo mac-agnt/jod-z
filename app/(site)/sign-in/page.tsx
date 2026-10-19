@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { stills } from "@/lib/media";
+import Image from "next/image";
+import { stills, AUTH_VISUAL_SIZES } from "@/lib/media";
 import { TradeAuth } from "@/components/TradeAuth";
 import { safeNext } from "@/lib/auth/constants";
 
@@ -10,8 +11,7 @@ export default async function SignIn({ searchParams }: { searchParams: Promise<{
   return (
     <main className="auth">
       <div className="auth-visual">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={stills.stable} alt="Young rider in Jod-Z leggings standing with her horse at the stable" />
+        <Image src={stills.stable} alt="Young rider in Jod-Z leggings standing with her horse at the stable" width={1122} height={1402} sizes={AUTH_VISUAL_SIZES} loading="eager" />
       </div>
       <TradeAuth portal="admin" next={safeNext(next, "/admin")} denied={!!denied} />
     </main>

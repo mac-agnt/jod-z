@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/Button";
 import { VideoRoll } from "@/components/VideoRoll";
 import { HeroVideo } from "@/components/HeroVideo";
@@ -61,13 +62,11 @@ export default function Home() {
           <ProductFeature product={legging} initial="buttermilk-beige" />
           <div className="campaign" aria-label="Campaign">
             <Reveal as="figure" variant="clip" className="campaign-a">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={stills.door} alt="Young rider in Buttermilk Beige Jod-Z leggings leading her horse from the stable" loading="lazy" />
+              <Image src={stills.door} alt="Young rider in Buttermilk Beige Jod-Z leggings leading her horse from the stable" width={1122} height={1402} sizes="(max-width: 900px) 100vw, (max-width: 1520px) 50vw, 760px" />
             </Reveal>
             <div className="campaign-b">
               <Reveal as="figure" variant="clip" delay={140}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={stills.sunset} alt="Rider cantering at sunset in Jod-Z leggings" loading="lazy" />
+                <Image src={stills.sunset} alt="Rider cantering at sunset in Jod-Z leggings" width={1122} height={1402} sizes="(max-width: 900px) 100vw, (max-width: 1520px) 46vw, 700px" />
               </Reveal>
               <Reveal className="campaign-copy" stagger={120} delay={220}>
                 <RevealText as="p" className="serif" delay={260} step={45}>Built to stay put, from the first lap of the warm-up to the last fence.</RevealText>

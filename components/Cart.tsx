@@ -1,5 +1,6 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import Image from "next/image";
 import { formatPrice, getProduct } from "@/lib/products";
 import { delivery } from "@/lib/offer";
 import { checkoutAction } from "@/lib/commerce/actions";
@@ -155,8 +156,7 @@ export function LineThumb({ product, colour }: { product: string; colour: string
   return (
     <div className="line-thumb">
       {c.image ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={c.image} alt={`${p.name}, ${c.name}`} />
+        <Image src={c.image} alt={`${p.name}, ${c.name}`} width={1122} height={1402} sizes="84px" />
       ) : (
         <ProductRender kind={p.kind} hex={c.hex} title={`${p.name}, ${c.name}`} />
       )}

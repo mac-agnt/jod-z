@@ -1,5 +1,6 @@
 "use client";
 import { useRef } from "react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Button } from "./Button";
 import { RevealText } from "./RevealText";
@@ -20,8 +21,7 @@ export function PartnerCTA() {
   if (["/affiliates", "/retailers", "/sign-in", "/auth", "/checkout"].some((p) => path.startsWith(p))) return null;
   return (
     <section className="partner" aria-labelledby="partner-title">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="partner-bg" src={stills.gallop} alt="" loading="lazy" />
+      <Image className="partner-bg" src={stills.gallop} alt="" width={1122} height={1402} sizes="100vw" />
       <div className="partner-scrim" />
       <div ref={glass} className="partner-glass glass">
         <p className="partner-kicker">Jod-Z partner programme</p>

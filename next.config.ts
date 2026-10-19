@@ -15,6 +15,8 @@ const config: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
   poweredByHeader: false,
   reactStrictMode: true,
+  // 75 is the default; detail shots of the fabric use 85 so the weave survives.
+  images: { qualities: [75, 85] },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },

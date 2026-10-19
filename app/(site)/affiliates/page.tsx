@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { stills } from "@/lib/media";
+import Image from "next/image";
+import { stills, AUTH_VISUAL_SIZES } from "@/lib/media";
 import { TradeAuth } from "@/components/TradeAuth";
 import { safeNext } from "@/lib/auth/constants";
 import { AmbassadorForm } from "@/components/forms/AmbassadorForm";
@@ -11,8 +12,7 @@ export default async function Affiliates({ searchParams }: { searchParams: Promi
   return (
     <main className="auth">
       <div className="auth-visual">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={stills.trio} alt="Three young riders on their ponies in Jod-Z leggings" />
+        <Image src={stills.trio} alt="Three young riders on their ponies in Jod-Z leggings" width={1672} height={941} sizes={AUTH_VISUAL_SIZES} loading="eager" />
       </div>
       <TradeAuth portal="affiliate" next={safeNext(next, "/affiliates/portal")} denied={!!denied} apply={<AmbassadorForm source="partner-page" />} />
     </main>

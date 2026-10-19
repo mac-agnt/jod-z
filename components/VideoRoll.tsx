@@ -1,8 +1,9 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Play, X } from "@phosphor-icons/react/dist/ssr";
-import { reels, type Reel } from "@/lib/media";
+import { REEL_SIZES, reels, type Reel } from "@/lib/media";
 import { Reveal } from "./Reveal";
 import { RevealText } from "./RevealText";
 import { getProduct } from "@/lib/products";
@@ -10,6 +11,17 @@ import { getProduct } from "@/lib/products";
 const legging = getProduct("the-jod-z");
 const colourName = (slug?: string) => legging?.colourways.find((c) => c.slug === slug)?.name;
 
+function ReelSources({ r }: { r: Reel }) {
+  return (
+    <>
+      {r.webm && <source src={r.webm} type='video/webm; codecs="vp9"' />}
+      <source src={r.src} type="video/mp4" />
+    </>
+  );
+}
+
+// Videos fetch nothing until they scroll into view and start playing; the
+// poster stands in until then.
 function ReelCard({ r, index, dupe, onOpen }: { r: Reel; index: number; dupe?: boolean; onOpen: (i: number) => void }) {
   const ref = useRef<HTMLVideoElement>(null);
   useEffect(() => {
@@ -25,10 +37,9 @@ function ReelCard({ r, index, dupe, onOpen }: { r: Reel; index: number; dupe?: b
   return (
     <figure className={`reel ${r.kind === "video" ? "reel-video" : ""}`} aria-hidden={dupe}>
       {r.kind === "video" ? (
-        <video ref={ref} src={r.src} poster={r.poster} muted loop playsInline preload="metadata" />
+        <video ref={ref} poster={r.poster} muted loop playsInline preload="none"><ReelSources r={r} /></video>
       ) : (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={r.src} alt={dupe ? "" : r.alt} loading="lazy" draggable={false} />
+        <Image src={r.src} alt={dupe ? "" : r.alt} width={720} height={1280} sizes={REEL_SIZES} draggable={false} />
       )}
       <button type="button" className="reel-hit" onClick={() => onOpen(index)} tabIndex={dupe ? -1 : 0} aria-label={`Open: ${r.caption}`}>
         <span className="play" aria-hidden="true"><Play size={18} weight="fill" /></span>
@@ -59,7 +70,7 @@ function Lightbox({ i, onClose, onNav }: { i: number; onClose: () => void; onNav
       <div className="lb-scrim" onClick={onClose} />
       <div className="lb-frame" key={r.src}>
         {r.kind === "video" ? (
-          <video src={r.src} poster={r.poster} autoPlay loop playsInline controls />
+          <video poster={r.poster} autoPlay loop playsInline controls><ReelSources r={r} /></video>
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={r.src} alt={r.alt} />

@@ -1,9 +1,14 @@
 "use client";
 import Link from "next/link";
+import Image, { getImageProps } from "next/image";
 import { useEffect, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { formatPrice, type Product } from "@/lib/products";
 import { stills } from "@/lib/media";
 import { Arrow } from "./Button";
+
+// The card image is 96px wide. The warm-up below asks for the same
+// candidate the <Image> picks, or a swap would still wait on the network.
+const card = { width: 1122, height: 1402, sizes: "96px" };
 
 // Glass product card in the hero. Hovering a swatch previews that colourway;
 // every link deep-links the PDP to the colour on show.
@@ -16,7 +21,14 @@ export function HeroCard({ product, initial }: { product: Product; initial?: str
   // the card is hidden on small screens.
   useEffect(() => {
     if (!matchMedia("(min-width: 981px)").matches) return;
-    const id = window.setTimeout(() => list.forEach((c) => { if (c.image) new Image().src = c.image; }), 3000);
+    const id = window.setTimeout(() => list.forEach((c) => {
+      if (!c.image) return;
+      const { srcSet, sizes, src } = getImageProps({ src: c.image, alt: "", ...card }).props;
+      const img = new window.Image();
+      img.sizes = sizes ?? "";
+      img.srcset = srcSet ?? "";
+      img.src = src;
+    }), 3000);
     return () => window.clearTimeout(id);
   }, [list]);
 
@@ -32,8 +44,7 @@ export function HeroCard({ product, initial }: { product: Product; initial?: str
   return (
     <div className="hero-card">
       <Link href={href} className="hero-card-img" tabIndex={-1} aria-hidden="true">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img key={active.slug} src={active.image ?? stills.render} alt="" />
+        <Image key={active.slug} src={active.image ?? stills.render} alt="" {...card} />
       </Link>
       <div className="hero-card-body">
         <Link href={href} className="hero-card-name">{product.name}</Link>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { stills } from "@/lib/media";
 import { SizeGuide } from "@/components/SizeGuide";
 import { Button } from "@/components/Button";
@@ -12,8 +13,7 @@ export default function Sizing() {
     <main className="page">
       <div className="wrap page-grid">
         <Reveal as="header" className="page-head" load stagger={90} delay={100}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="page-visual" src={stills.pocket} alt="Close up of the Jod-Z high waist and phone pocket" />
+          <Image className="page-visual" src={stills.pocket} alt="Close up of the Jod-Z high waist and phone pocket" width={1122} height={1402} sizes="(max-width: 600px) 100vw, 520px" quality={85} loading="eager" style={{ height: "auto" }} />
           <RevealText as="h1" className="serif page-title" load delay={260} step={70}>Find your <em>fit.</em></RevealText>
           <p className="muted">Leggings go by age. Jockey breeches go by waist, in inches. Between sizes, size up.</p>
           <div className="page-ctas">

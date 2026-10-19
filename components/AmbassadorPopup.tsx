@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import { stills } from "@/lib/media";
 import { AmbassadorForm } from "./forms/AmbassadorForm";
 
@@ -58,8 +59,7 @@ export function AmbassadorPopup() {
       <div className="amb-scrim" onClick={close} />
       <div ref={panel} className="amb" role="dialog" aria-modal="true" aria-labelledby="amb-title" tabIndex={-1} onKeyDown={trap}>
         <div className="amb-visual">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={stills.stable} alt="Young rider in Jod-Z leggings standing with her horse at the stable" />
+          <Image src={stills.stable} alt="Young rider in Jod-Z leggings standing with her horse at the stable" width={1122} height={1402} sizes="(max-width: 720px) 100vw, 470px" loading="eager" />
         </div>
         <div className="amb-body">
           <button type="button" className="icon-btn amb-close" onClick={close} aria-label="Close">
